@@ -8,6 +8,8 @@ This is POSIX-compliant code for parsing shell script arguments. It helps you fo
 2. [Usage](#usage)
 3. [Syntax conventions](#argument-syntax-conventions)
 4. [Configuration](#configuration)
+5. [Functions](#functions)
+6. [License](#license)
 
 
 ## Installation
