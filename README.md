@@ -265,7 +265,7 @@ baz
 ```
 
 ## TODO
-- Bug: required + variable/variable_value при разметке опций не имеет смысла, т.к. переменная будет константой;
+- Bug: required + variable/variable_value makes no sense as it makes option variable constant;
 - Add examples;
 - Implement "Help" generation;
 - Add tests.
