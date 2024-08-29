@@ -139,19 +139,14 @@ _is_valid_var_name() {
 _command_required() {
   [ "$_accept_command" = "none" ] && return 1
   [ "$_accept_command" != "auto" ] && return 0
+  [ "$_mapped_commands_count" -gt 0 ]
+}
 
-  _i=1
-  while [ "$_i" -le "$_mapped_commands_count" ]; do
-    _command_auto_mapped=$(_var_value "_commands_${_i}_auto")
-
-    if _is_not "$_command_auto_mapped"; then
-      return 0
-    fi
-
-    _i=$(_math "$_i + 1")
-  done
-
-  return 1
+_mapped_options_only() {
+  [ "$_accept_options" = "none" ] && return 1
+  [ "$_accept_options" = "any" ] && return 1
+  [ "$_accept_options" = "mapped_only" ] && return 0
+  [ "$_mapped_options_count" -gt 0 ]
 }
 
 _map_command() {
@@ -714,7 +709,7 @@ _use_option() {
   _option_index=$(_get_mapped_option_index_by_alias "$1")
 
   if [ -z "$_option_index" ]; then
-    if [ "$_accept_options" = "mapped_only" ]; then
+    if _mapped_options_only; then
       _err "Unknown option: $1."
     else
       _map_option_auto "$1"
