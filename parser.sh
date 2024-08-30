@@ -8,7 +8,6 @@ _mapping_key_value_delimiter="="
 _mapping_values_delimiter=","
 _option_duplicates_allowed=true
 _option_key_value_delimiter=" "
-_option_variable_default_value=true
 _option_values_delimiter=" "
 _options_combination_allowed=true
 _options_combination_args_allowed=true
@@ -231,8 +230,6 @@ _map_option() {
       _validate_option_aliases "$_map_value"
     elif [ "$_map_key" = "variable" ]; then
       _validate_option_variable "$_map_value"
-    elif [ "$_map_key" = "variable_value" ]; then
-      _validate_option_variable_value "$_map_value"
     elif [ "$_map_key" = "description" ]; then
       _validate_option_description "$_map_value"
     elif [ "$_map_key" = "max_args" ]; then
@@ -429,6 +426,13 @@ _validate_option_variable() {
     _err "Option #${_option_index} variable is already mapped."
   fi
 
+  _min_args=$(_var_value "${_mapping_option_prefix}_min_args")
+  _max_args=$(_var_value "${_mapping_option_prefix}_max_args")
+
+  if { [ -n "$_min_args" ] && [ "$_min_args" -ne 1 ]; } || { [ -n "$_max_args" ] && [ "$_max_args" -ne 1 ]; }; then
+    _err "Option #${_option_index} variable can only be used with options with a single argument."
+  fi
+
   if [ -z "$1" ]; then
     _err "Option #${_option_index} variable cannot be empty."
   fi
@@ -445,16 +449,6 @@ _validate_option_variable() {
 
     _i=$(_math "$_i + 1")
   done
-}
-
-_validate_option_variable_value() {
-  if [ -n "$(_var_value "${_mapping_option_prefix}_variable_value")" ]; then
-    _err "Option #${_option_index} variable value is already mapped."
-  fi
-
-  if [ -z "$1" ]; then
-    _err "Option #${_option_index} variable value cannot be empty."
-  fi
 }
 
 _validate_option_description() {
@@ -480,6 +474,10 @@ _validate_option_max_args() {
     _err "Option #${_option_index} max args is invalid: $1. Must be a non-negative integer."
   fi
 
+  if [ -n "$(_var_value "${_mapping_option_prefix}_variable")" ] && [ "$1" -ne 1 ]; then
+    _err "Option #${_option_index} max args is invalid: $1. Implicitly set to 1 when option variable was set."
+  fi
+
   if (_is "$(_var_value "${_mapping_option_prefix}_required")") && [ "$1" -eq 0 ]; then
     _err "Option #${_option_index} must be removed as constant. It is required without arguments."
   fi
@@ -496,6 +494,10 @@ _validate_option_min_args() {
 
   if ! _is_int "$1"; then
     _err "Option #${_option_index} min args is invalid: $1. Must be a non-negative integer."
+  fi
+
+  if [ -n "$(_var_value "${_mapping_option_prefix}_variable")" ] && [ "$1" -ne 1 ]; then
+    _err "Option #${_option_index} min args is invalid: $1. Implicitly set to 1 when option variable was set."
   fi
 }
 
@@ -721,18 +723,6 @@ _use_option() {
 
   _assign "_options_${_option_index}_used" "true"
   _assign "_options_${_option_index}_used_alias" "$1"
-
-  _option_variable=$(_var_value "_options_${_option_index}_variable")
-
-  if [ -n "$_option_variable" ]; then
-    _option_variable_value=$(_var_value "_options_${_option_index}_variable_value")
-
-    if [ -z "$_option_variable_value" ]; then
-      _option_variable_value="$_option_variable_default_value"
-    fi
-
-    _assign "$_option_variable" "$_option_variable_value"
-  fi
 }
 
 _parse_option_args() {
@@ -756,6 +746,12 @@ _parse_option_arg() {
 
   _assign "_options_${_option_index}_args_${_option_arg_index}" "$1"
   _assign "_options_${_option_index}_args_count" "$_option_arg_index"
+
+  _variable="$(_var_value "_options_${_option_index}_variable")"
+
+  if [ -n "$_variable" ]; then
+    _assign "$_variable" "$1"
+  fi
 }
 
 _use_command() {

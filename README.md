@@ -101,7 +101,6 @@ Configuration variables must be assigned before calling `_parse`.
 | _option_duplicates_allowed | `false` | `true` — Multiple uses of options are allowed.<br>`false` — Multiple uses of options are not allowed.|
 | _option_key_value_delimiter | `' '` | Option alias-args delimiter. |
 | _option_values_delimiter | `' '` | Option values delimiter. |
-| _option_variable_default_value | `true` | Default value assigned to the option variable (see [_map_option](#_map_option)). |
 | _options_combination_allowed | `true` | `true` — Combining short option aliases into combinations is allowed.<br>`false` — Combining short option aliases is not allowed. |
 | _options_combination_args_allowed | `true` | `true` — Passing arguments to the last option in a combination is allowed.<br>`false` — Passing arguments to the last option in a combination is not allowed. |
 | _positional_args_placement | `any` | `any` — Positional arguments can be placed anywhere, including mixed with options.<br>`before_options` — Positional arguments are placed before options.<br>`after_options` — Positional arguments are placed after options. |
@@ -150,8 +149,7 @@ Maps an option. Takes key-value pairs as arguments. Key and values list are sepa
 | description | Option description. Currently not used. |
 | min_args | Minimum number of option arguments. |
 | max_args | Maximum number of option arguments. |
-| variable | Name of the variable that will store the value when the option is used. |
-| variable_value | Value that will be assigned to the option variable when used. |
+| variable | Name of the variable that will store option's argument when the option is used. Implicitly sets `min_args` and `max_args` to 1. |
 | required | If the `required` flag is present, the option will be considered mandatory. |
 
 ```bash
