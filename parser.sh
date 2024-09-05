@@ -18,7 +18,10 @@ _mapped_options_count=0
 _positional_args_count=0
 
 _err() {
-  echo "$1"
+  for arg in "$@"; do
+    echo "$arg"
+  done
+
   exit 1
 }
 
