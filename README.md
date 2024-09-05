@@ -263,6 +263,7 @@ baz
 ```
 
 ## TODO
+- Add "Debug" mode with verbose output;
 - Bug: required + variable/variable_value makes no sense as it makes option variable constant;
 - Add examples;
 - Implement "Help" generation;
