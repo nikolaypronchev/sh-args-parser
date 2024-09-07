@@ -96,6 +96,7 @@ Configuration variables must be assigned before calling `_parse`.
 | _accept_options | `auto` | `any` — The script accepts any options.<br>`none` — The script does not accept any options.<br>`mapped_only` — The script accepts only mapped options.<br>`auto` — The script accepts only mapped options if at least one has been mapped. Otherwise, it accepts any options. |
 | _default_max_positional_args |  | Maximum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
 | _default_min_positional_args | `0` | Minimum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
+| _default_positional_arg_variable || Name of the variable that will store the single positional argument. Implicitly sets `_default_max_positional_args` and `_default_min_positional_args` to 1. Command-specific values for `max_args` and `arg_variable` disables this behavior. |
 | _mapping_key_value_delimiter | `=` | Key-value delimiter for options mapping (see [_map_option](#_map_option)). |
 | _mapping_values_delimiter | `,` | Values delimiter for options mapping (see [_map_option](#_map_option)). |
 | _option_duplicates_allowed | `false` | `true` — Multiple uses of options are allowed.<br>`false` — Multiple uses of options are not allowed.|
@@ -131,6 +132,7 @@ Maps a command. Takes key-value pairs as arguments. Key and values list are sepa
 | description | Command description. Currently not used. |
 | min_args | Minimum number of positional arguments when using the command. |
 | max_args | Maximum number of positional arguments when using the command. |
+| arg_variable | Name of the variable that will store the command's positional argument. Implicitly sets `min_args` and `max_args` to 1. |
 
 ```bash
 _map_command \

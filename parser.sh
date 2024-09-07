@@ -4,6 +4,7 @@ _accept_command=auto # auto, none, any, mapped_only
 _accept_options=auto # auto, none, any, mapped_only
 _default_max_positional_args=""
 _default_min_positional_args=0
+_default_positional_arg_variable=""
 _mapping_key_value_delimiter="="
 _mapping_values_delimiter=","
 _option_duplicates_allowed=true
@@ -151,6 +152,33 @@ _mapped_options_only() {
   [ "$_mapped_options_count" -gt 0 ]
 }
 
+_is_free_var_name() {
+  if [ -n "$_default_positional_arg_variable" ] && [ "$_default_positional_arg_variable" = "$1" ]; then
+      echo "variable is already used as default positional arg variable: $1."
+      return 1
+  fi
+
+  _i=1
+  while [ "$_i" -le "$_mapped_options_count" ]; do
+    if [ "$1" = "$(_var_value "_options_${_i}_variable")" ]; then
+      echo "variable is already mapped for option #${_i}: $1."
+      return 1
+    fi
+
+    _i=$(_math "$_i + 1")
+  done
+
+  _i=1
+  while [ "$_i" -le "$_mapped_commands_count" ]; do
+    if [ "$1" = "$(_var_value "_commands_${_i}_arg_variable")" ]; then
+      echo "arg variable is already mapped for command #${_i}: $1."
+      return 1
+    fi
+
+    _i=$(_math "$_i + 1")
+  done
+}
+
 _map_command() {
   _command_index=$(_math "$_mapped_commands_count + 1")
   _mapping_command_prefix="_commands_${_command_index}"
@@ -179,6 +207,10 @@ _map_command() {
       _validate_command_min_args "$_map_value"
     elif [ "$_map_key" = "name" ]; then
       _validate_command_name "$_map_value"
+    elif [ "$_map_key" = "arg_variable" ]; then
+      _validate_command_arg_variable "$_map_value"
+      _assign "${_mapping_command_prefix}_min_args" 1
+      _assign "${_mapping_command_prefix}_max_args" 1
     else
       _err "Invalid command #${_command_index} mapping key: $_map_key."
     fi
@@ -233,6 +265,8 @@ _map_option() {
       _validate_option_aliases "$_map_value"
     elif [ "$_map_key" = "variable" ]; then
       _validate_option_variable "$_map_value"
+      _assign "${_mapping_option_prefix}_min_args" 1
+      _assign "${_mapping_option_prefix}_max_args" 1
     elif [ "$_map_key" = "description" ]; then
       _validate_option_description "$_map_value"
     elif [ "$_map_key" = "max_args" ]; then
@@ -345,6 +379,31 @@ _validate_command_name() {
   done
 }
 
+_validate_command_arg_variable() {
+  if [ -n "$(_var_value "${_mapping_command_prefix}_arg_variable")" ]; then
+    _err "Command #${_command_index} arg variable is already mapped."
+  fi
+
+  _min_args=$(_var_value "${_mapping_command_prefix}_min_args")
+  _max_args=$(_var_value "${_mapping_command_prefix}_max_args")
+
+  if { [ -n "$_min_args" ] && [ "$_min_args" -ne 1 ]; } || { [ -n "$_max_args" ] && [ "$_max_args" -ne 1 ]; }; then
+    _err "Command #${_command_index} arg variable can only be used with commands that requires single argument."
+  fi
+
+  if [ -z "$1" ]; then
+    _err "Command #${_command_index} arg variable cannot be empty."
+  fi
+
+  if ! _is_valid_var_name "$1"; then
+    _err "Command #${_command_index} arg variable is invalid: $1. Must be a valid variable name."
+  fi
+
+  if ! _description=$(_is_free_var_name "$1"); then
+    _err "Command #${_command_index} ${_description}"
+  fi
+}
+
 _validate_option_aliases() {
   if [ -n "$(_var_value "${_mapping_option_prefix}_aliases")" ]; then
     _err "Option #${_option_index} aliases are already mapped."
@@ -444,14 +503,9 @@ _validate_option_variable() {
     _err "Option #${_option_index} variable is invalid: $1. Must be a valid variable name."
   fi
 
-  _i=1
-  while [ "$_i" -le "$_mapped_options_count" ]; do
-    if [ "$1" = "$(_var_value "_options_${_i}_variable")" ]; then
-      _err "Option #${_option_index} variable is already mapped for option #${_i}: $1."
-    fi
-
-    _i=$(_math "$_i + 1")
-  done
+  if ! _description=$(_is_free_var_name "$1"); then
+    _err "Option #${_option_index} ${_description}"
+  fi
 }
 
 _validate_option_description() {
@@ -477,10 +531,6 @@ _validate_option_max_args() {
     _err "Option #${_option_index} max args is invalid: $1. Must be a non-negative integer."
   fi
 
-  if [ -n "$(_var_value "${_mapping_option_prefix}_variable")" ] && [ "$1" -ne 1 ]; then
-    _err "Option #${_option_index} max args is invalid: $1. Implicitly set to 1 when option variable was set."
-  fi
-
   if (_is "$(_var_value "${_mapping_option_prefix}_required")") && [ "$1" -eq 0 ]; then
     _err "Option #${_option_index} must be removed as constant. It is required without arguments."
   fi
@@ -497,10 +547,6 @@ _validate_option_min_args() {
 
   if ! _is_int "$1"; then
     _err "Option #${_option_index} min args is invalid: $1. Must be a non-negative integer."
-  fi
-
-  if [ -n "$(_var_value "${_mapping_option_prefix}_variable")" ] && [ "$1" -ne 1 ]; then
-    _err "Option #${_option_index} min args is invalid: $1. Implicitly set to 1 when option variable was set."
   fi
 }
 
@@ -640,25 +686,36 @@ _parse_positional_args() {
     _err "Positional arguments must be placed before options: $1."
   fi
 
-  if [ -z "$_command_index" ]; then
-    _max_args_count="$_default_max_positional_args"
-  else
-    _max_args_count=$(_var_value "_commands_${_command_index}_max_args")
+  if [ -n "$_command_index" ]; then
+    _max_args=$(_var_value "_commands_${_command_index}_max_args")
+    _arg_variable="$(_var_value "_commands_${_command_index}_arg_variable")"
+  fi
+
+  if [ -z "$_max_args" ]; then
+    _max_args=$_default_max_positional_args
+  fi
+
+  if [ -z "$_arg_variable" ]; then
+    _arg_variable="$_default_positional_arg_variable"
   fi
 
   while [ $# -gt 0 ]; do
     _positional_arg_index=$(_math "$_positional_args_count + 1")
 
-    if [ -n "$_max_args_count" ] && [ "$_positional_arg_index" -gt "$_max_args_count" ]; then
+    if [ -n "$_max_args" ] && [ "$_positional_arg_index" -gt "$_max_args" ]; then
       if [ -z "$_command_index" ]; then
-        _err "Maximum $_max_args_count positional argument(s) allowed."
+        _err "Maximum $_max_args positional argument(s) allowed."
       else
-        _err "Maximum $_max_args_count positional argument(s) allowed for command: $(_var_value "_commands_${_command_index}_name")."
+        _err "Maximum $_max_args positional argument(s) allowed for command: $(_var_value "_commands_${_command_index}_name")."
       fi
     fi
 
     _assign "_positional_args_${_positional_arg_index}" "$1"
-    _positional_args_count=$_positional_arg_index
+    _assign "_positional_args_count" "$_positional_arg_index"
+
+    if [ -n "$_arg_variable" ]; then
+      _assign "$_arg_variable" "$1"
+    fi
 
     shift
   done
