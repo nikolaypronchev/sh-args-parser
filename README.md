@@ -71,7 +71,7 @@ A command typically represents the core action performed by the script: `run`, `
 
 - Positional arguments are placed after the command, if present.
 - The presence and number of positional arguments are determined by the script's logic.
-- After the special argument --, all arguments are considered positional. This allows passing arguments that start with a dash and might be confused with options.
+- After the special argument `--`, all arguments are considered positional. This allows passing arguments that start with a dash and might be confused with options.
 
 ### Options
 Options are script parameters. Each option has at least one alias by which it can be specified in the command line. Options often have both short and long aliases, such as `-h` and `--help`.
