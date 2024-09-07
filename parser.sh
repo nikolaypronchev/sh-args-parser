@@ -52,6 +52,10 @@ _is_int() {
   esac
 }
 
+_is_flag() {
+  [ "$1" = "true" ] || [ "$1" = "false" ]
+}
+
 _assign() {
   if ! _is_valid_var_name "$1"; then
     _err "Invalid variable name: $1."
@@ -154,14 +158,14 @@ _mapped_options_only() {
 
 _is_free_var_name() {
   if [ -n "$_default_positional_arg_variable" ] && [ "$_default_positional_arg_variable" = "$1" ]; then
-      echo "variable is already used as default positional arg variable: $1."
+      echo "Variable is already used as default positional arg variable: $1."
       return 1
   fi
 
   _i=1
   while [ "$_i" -le "$_mapped_options_count" ]; do
     if [ "$1" = "$(_var_value "_options_${_i}_variable")" ]; then
-      echo "variable is already mapped for option #${_i}: $1."
+      echo "Variable is already mapped for option #${_i}: $1."
       return 1
     fi
 
@@ -171,12 +175,51 @@ _is_free_var_name() {
   _i=1
   while [ "$_i" -le "$_mapped_commands_count" ]; do
     if [ "$1" = "$(_var_value "_commands_${_i}_arg_variable")" ]; then
-      echo "arg variable is already mapped for command #${_i}: $1."
+      echo "Arg variable is already mapped for command #${_i}: $1."
       return 1
     fi
 
     _i=$(_math "$_i + 1")
   done
+}
+
+_set_config() {
+  _config_key="$1"
+  _config_value="$2"
+
+  if [ "$_config_key" = "accept_command" ]; then
+    _validate_config_accept_command "$_config_value"
+  elif [ "$_config_key" = "accept_options" ]; then
+    _validate_config_accept_options "$_config_value"
+  elif [ "$_config_key" = "default_max_positional_args" ]; then
+    _validate_config_default_max_positional_args "$_config_value"
+  elif [ "$_config_key" = "default_min_positional_args" ]; then
+    _validate_config_default_min_positional_args "$_config_value"
+  elif [ "$_config_key" = "default_positional_arg_variable" ]; then
+    _validate_config_default_positional_arg_variable "$_config_value"
+    _default_max_positional_args="1"
+    _default_min_positional_args="1"
+  elif [ "$_config_key" = "mapping_key_value_delimiter" ]; then
+    _validate_config_mapping_key_value_delimiter "$_config_value"
+  elif [ "$_config_key" = "mapping_values_delimiter" ]; then
+    _validate_config_mapping_values_delimiter "$_config_value"
+  elif [ "$_config_key" = "option_duplicates_allowed" ]; then
+    _validate_config_option_duplicates_allowed "$_config_value"
+  elif [ "$_config_key" = "option_key_value_delimiter" ]; then
+    _validate_config_option_key_value_delimiter "$_config_value"
+  elif [ "$_config_key" = "option_values_delimiter" ]; then
+    _validate_config_option_values_delimiter "$_config_value"
+  elif [ "$_config_key" = "options_combination_allowed" ]; then
+    _validate_config_options_combination_allowed "$_config_value"
+  elif [ "$_config_key" = "options_combination_args_allowed" ]; then
+    _validate_config_options_combination_args_allowed "$_config_value"
+  elif [ "$_config_key" = "positional_args_placement" ]; then
+    _validate_config_positional_args_placement "$_config_value" # TODO
+  else
+    _err "Unknown config key: $_config_key."
+  fi
+
+  _assign "_$_config_key" "$_config_value"
 }
 
 _map_command() {
@@ -306,6 +349,131 @@ _map_option_auto() {
   _mapped_options_count=$_option_index
 }
 
+_validate_config_accept_command() {
+  case "$1" in
+    any | none | mapped_only | auto)
+      ;;
+    *)
+      _err "Invalid config \"_accept_command\" value: $1. Expected: any, none, mapped_only, auto."
+    ;;
+  esac
+}
+
+_validate_config_accept_options() {
+  case "$1" in
+    any | none | mapped_only | auto)
+      ;;
+    *)
+      _err "Invalid config \"_accept_options\" value: $1. Expected: any, none, mapped_only, auto."
+    ;;
+  esac
+}
+
+_validate_config_default_max_positional_args() {
+  if ! _is_int "$1"; then
+    _err "Invalid config \"_default_max_positional_args\" value: $1. Expected: a non-negative integer."
+  fi
+
+  if [ -n "$_default_positional_arg_variable" ] && [ "$1" -ne 1 ]; then
+    _err "Config \"_default_max_positional_args\" cannot differ from 1 if \"_default_positional_arg_variable\" is set."
+  fi
+}
+
+_validate_config_default_min_positional_args() {
+    if ! _is_int "$1"; then
+    _err "Invalid config \"_default_min_positional_args\" value: $1. Expected: a non-negative integer."
+  fi
+
+  if [ -n "$_default_positional_arg_variable" ] && [ "$1" -ne 1 ]; then
+    _err "Config \"_default_min_positional_args\" cannot differ from 1 if \"_default_positional_arg_variable\" is set."
+  fi
+}
+
+_validate_config_default_positional_arg_variable() {
+  if ! _is_valid_var_name "$1"; then
+    _err "Default positional arg variable is invalid: $1. Must be a valid variable name."
+  fi
+
+  if ! _description=$(_is_free_var_name "$1"); then
+    _err "Default positional arg is already used. ${_description}"
+  fi
+}
+
+_validate_config_mapping_key_value_delimiter() {
+  case "$1" in
+    "=" | ":")
+      ;;
+    *)
+      _err "Invalid config \"_mapping_key_value_delimiter\" value: $1. Expected: \"=\", \":\"."
+    ;;
+  esac
+}
+
+_validate_config_mapping_values_delimiter() {
+  case "$1" in
+    "," | "|" | ";" | "/")
+      ;;
+    *)
+      _err "Invalid config \"_mapping_values_delimiter\" value: $1. Expected: \",\", \"|\", \";\", \"/\"."
+      ;;
+  esac
+}
+
+_validate_config_option_duplicates_allowed() {
+  if ! _is_flag "$1"; then
+    _err "Invalid config \"_option_duplicates_allowed\" value: $1. Expected \"true\" or \"false\"."
+  fi
+}
+
+_validate_config_option_key_value_delimiter() {
+  case "$1" in
+    " " | "=" | ":")
+      ;;
+    *)
+      _err "Invalid config \"_option_key_value_delimiter\" value: $1. Expected: \" \", \"=\", \":\"."
+    ;;
+  esac
+
+  if [ "$1" != " " ] && [ "$_option_key_value_delimiter" = " " ]; then
+    _err "Non-space value of config \"_option_key_value_delimiter\" is incompatible with space valueof config \"_option_values_delimiter\" due to parsing ambiguity."
+  fi
+}
+
+_validate_config_option_values_delimiter() {
+  case "$1" in
+    " " |"," | "|" | ";" | "/")
+      ;;
+    *)
+      _err "Invalid config \"_mapping_values_delimiter\" value: $1. Expected: \" \", \",\", \"|\", \";\", \"/\"."
+      ;;
+  esac
+
+  if [ "$1" = " " ] && [ "$_option_key_value_delimiter" != " " ]; then
+    _err "Non-space value of config \"_option_key_value_delimiter\" is incompatible with space valueof config \"_option_values_delimiter\" due to parsing ambiguity."
+  fi
+}
+
+_validate_config_options_combination_allowed() {
+  if ! _is_flag "$1"; then
+    _err "Invalid config \"_options_combination_allowed\" value: $1. Expected \"true\" or \"false\"."
+  fi
+}
+
+_validate_config_options_combination_args_allowed() {
+  if ! _is_flag "$1"; then
+    _err "Invalid config \"_options_combination_args_allowed\" value: $1. Expected \"true\" or \"false\"."
+  fi
+}
+
+_validate_config_positional_args_placement() {
+  case "$1" in
+    any | before_options | after_options)
+      ;;
+    *)
+      _err "Invalid config \"_positional_args_placement\" value: $1. Expected: any, before_options, after_options."
+    ;;
+  esac
+}
 
 _validate_command_description() {
   if [ -n "$(_var_value "${_mapping_command_prefix}_description")" ]; then
@@ -400,7 +568,7 @@ _validate_command_arg_variable() {
   fi
 
   if ! _description=$(_is_free_var_name "$1"); then
-    _err "Command #${_command_index} ${_description}"
+    _err "Command #${_command_index} arg variable is already used. ${_description}"
   fi
 }
 
@@ -504,7 +672,7 @@ _validate_option_variable() {
   fi
 
   if ! _description=$(_is_free_var_name "$1"); then
-    _err "Option #${_option_index} ${_description}"
+    _err "Option #${_option_index} variable is already used. ${_description}"
   fi
 }
 
@@ -674,9 +842,9 @@ _parse() {
 
   if [ "$_min_positional_args" -gt 0 ] && [ "$_positional_args_count" -lt "$_min_positional_args" ]; then
     if [ "$_used_command_index" -eq 0 ]; then
-      _err "At least $_min_positional_args argument(s) required."
+      _err "At least $_min_positional_args positional argument(s) required."
     else
-      _err "At least $_min_positional_args argument(s) required for command: $(_var_value "_commands_${_used_command_index}_name")."
+      _err "At least $_min_positional_args positional argument(s) required for command: $(_var_value "_commands_${_used_command_index}_name")."
     fi
   fi
 }

@@ -83,30 +83,31 @@ Options are script parameters. Each option has at least one alias by which it ca
 
 ## Configuration
 
-Configuration is defined by assigning values to variables before using the parser. For example:
-
-```bash
-_accept_command=true
-```
-Configuration variables must be assigned before calling `_parse`.
+Configuration is done by assigning values to special keys via [`_set_config`](#_set_config) before using [`_parse`](#_parse).
 
 | Name | Default Value | Description |
 | --- | --- | --- |
-| _accept_command | `auto` | `any` — The script accepts a command.<br>`none` — The script does not accept a command.<br>`mapped_only` — The script accepts only a mapped command.<br>`auto` — The script accepts a command if at least one has been mapped. |
-| _accept_options | `auto` | `any` — The script accepts any options.<br>`none` — The script does not accept any options.<br>`mapped_only` — The script accepts only mapped options.<br>`auto` — The script accepts only mapped options if at least one has been mapped. Otherwise, it accepts any options. |
-| _default_max_positional_args |  | Maximum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
-| _default_min_positional_args | `0` | Minimum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
-| _default_positional_arg_variable || Name of the variable that will store the single positional argument. Implicitly sets `_default_max_positional_args` and `_default_min_positional_args` to 1. Command-specific values for `max_args` and `arg_variable` disables this behavior. |
-| _mapping_key_value_delimiter | `=` | Key-value delimiter for options mapping (see [_map_option](#_map_option)). |
-| _mapping_values_delimiter | `,` | Values delimiter for options mapping (see [_map_option](#_map_option)). |
-| _option_duplicates_allowed | `false` | `true` — Multiple uses of options are allowed.<br>`false` — Multiple uses of options are not allowed.|
-| _option_key_value_delimiter | `' '` | Option alias-args delimiter. |
-| _option_values_delimiter | `' '` | Option values delimiter. |
-| _options_combination_allowed | `true` | `true` — Combining short option aliases into combinations is allowed.<br>`false` — Combining short option aliases is not allowed. |
-| _options_combination_args_allowed | `true` | `true` — Passing arguments to the last option in a combination is allowed.<br>`false` — Passing arguments to the last option in a combination is not allowed. |
-| _positional_args_placement | `any` | `any` — Positional arguments can be placed anywhere, including mixed with options.<br>`before_options` — Positional arguments are placed before options.<br>`after_options` — Positional arguments are placed after options. |
+| accept_command | `auto` | `any` — The script accepts a command.<br>`none` — The script does not accept a command.<br>`mapped_only` — The script accepts only a mapped command.<br>`auto` — The script accepts a command if at least one has been mapped. |
+| accept_options | `auto` | `any` — The script accepts any options.<br>`none` — The script does not accept any options.<br>`mapped_only` — The script accepts only mapped options.<br>`auto` — The script accepts only mapped options if at least one has been mapped. Otherwise, it accepts any options. |
+| default_max_positional_args |  | Maximum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
+| default_min_positional_args | `0` | Minimum number of positional arguments. A different value can be set for each command (see [_map_command](#_map_command)). |
+| default_positional_arg_variable || Name of the variable that will store the single positional argument. Implicitly sets `_default_max_positional_args` and `_default_min_positional_args` to 1. Command-specific values for `max_args` and `arg_variable` disables this behavior. |
+| mapping_key_value_delimiter | `=` | Key-value delimiter for options mapping (see [_map_option](#_map_option)). Allowed values: `=` `:`.|
+| mapping_values_delimiter | `,` | Values delimiter for options mapping (see [_map_option](#_map_option)). Allowed values: `,` `;` `\|` `/`.|
+| option_duplicates_allowed | `false` | `true` — Multiple uses of options are allowed.<br>`false` — Multiple uses of options are not allowed.|
+| option_key_value_delimiter | `' '` | Option alias-args delimiter. Allowed values: `' '` `=` `:`.|
+| option_values_delimiter | `' '` | Option values delimiter. Allowed values: `' '` `,` `;` `\|` `/`.|
+| options_combination_allowed | `true` | `true` — Combining short option aliases into combinations is allowed.<br>`false` — Combining short option aliases is not allowed. |
+| options_combination_args_allowed | `true` | `true` — Passing arguments to the last option in a combination is allowed.<br>`false` — Passing arguments to the last option in a combination is not allowed. |
+| positional_args_placement | `any` | `any` — Positional arguments can be placed anywhere, including mixed with options.<br>`before_options` — Positional arguments are placed before options.<br>`after_options` — Positional arguments are placed after options. |
 
 ## Functions
+
+#### _set_config
+Sets the configuration variables. Full list of configuration variables and expected values can be found in the [Configuration](#configuration) section.
+```bash
+_set_config '_accept_command' 'any'
+```
 
 #### _parse
 Parses the provided arguments. Typically, takes all command-line arguments `$@` as input.
