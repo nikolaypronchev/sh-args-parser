@@ -266,8 +266,6 @@ baz
 ```
 
 ## TODO
-- Add function to set config variables and validates them;
-- Add "Debug" mode with verbose output;
 - Add examples;
 - Implement "Help" generation;
 - Add tests.
