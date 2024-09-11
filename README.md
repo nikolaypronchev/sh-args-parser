@@ -103,6 +103,22 @@ Configuration is done by assigning values to special keys via [`_set_config`](#_
 
 ## Functions
 
+- [_set_config](#_set_config)
+- [_parse](#_parse)
+- [Functions for command and option mapping](#functions-for-command-and-option-mapping):
+  - [_map_command](#_map_command)
+  - [_map_option](#_map_option)
+- [Functions for working with parsing results](#functions-for-working-with-parsing-results):
+  - [_get_command](#_get_command)
+  - [_is_used_command](#_is_used_command)
+  - [_get_positional_args](#_get_positional_args)
+  - [_get_positional_args_count](#_get_positional_args_count)
+  - [_get_positional_arg](#_get_positional_arg)
+  - [_is_used_option](#_is_used_option)
+  - [_get_option_args](#_get_option_args)
+  - [_get_option_args_count](#_get_option_args_count)
+  - [_get_option_arg](#_get_option_arg)
+
 #### _set_config
 Sets the configuration variables. Full list of configuration variables and expected values can be found in the [Configuration](#configuration) section.
 ```bash
