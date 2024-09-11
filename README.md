@@ -197,6 +197,20 @@ _is_used_command bar && echo 'Command "bar" was used'
 Command "foo" was used
 ```
 
+#### _get_positional_args
+
+Outputs the positional arguments separated by space. Delimiter can be changed by passing it's value as the first argument.
+
+```bash
+_parse foo bar baz
+_get_positional_args
+_get_positional_args "|"
+```
+```
+foo bar baz
+foo|bar|baz
+```
+
 #### _get_positional_args_count
 
 Outputs the number of positional arguments.
@@ -237,6 +251,20 @@ _is_used_option -c && echo 'Option "-c" was used'
 ```
 Option "--bar" was used
 Option "-c" was used
+```
+
+#### _get_option_args
+
+Outputs the arguments of the option separated by space. Mandatory option alias is expected as the first argument. Delimiter can be changed by passing it's value as the second argument.
+
+```bash
+_parse -v foo bar baz
+_get_option_args -v
+_get_option_args -v "|"
+```
+```
+foo bar baz
+foo|bar|baz
 ```
 
 #### _get_option_args_count

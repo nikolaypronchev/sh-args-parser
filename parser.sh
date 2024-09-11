@@ -1007,6 +1007,24 @@ _is_used_command() {
   [ -n "$_command_index" ] && [ -n "$_used_command_index" ] && [ "$_command_index" -eq "$_used_command_index" ]
 }
 
+_get_positional_args() {
+  _delimiter=${1:-" "}
+
+
+  if [ "$_positional_args_count" -gt "1" ]; then
+    _positional_args=""
+
+    _i=1
+    while [ "$_i" -le "$_positional_args_count" ]; do
+        _positional_arg=$(_var_value "_positional_args_${_i}")
+        _positional_args="${_positional_args}${_delimiter}${_positional_arg}"
+        _i=$(_math "$_i + 1")
+    done
+
+    echo "${_positional_args#"$_delimiter"}"
+  fi
+}
+
 _get_positional_args_count() {
   echo  "$_positional_args_count"
 }
@@ -1028,6 +1046,25 @@ _get_positional_arg() {
 _is_used_option() {
   _option_index=$(_get_mapped_option_index_by_alias "$1")
   [ -n "$_option_index" ] && _is "$(_var_value "_options_${_option_index}_used")"
+}
+
+_get_option_args() {
+  _option_index=$(_get_mapped_option_index_by_alias "$1")
+  _delimiter=${2:-" "}
+
+  _option_args=""
+  if [ -n "$_option_index" ]; then
+    _option_args_count=$(_var_value "_options_${_option_index}_args_count")
+
+    _i=1
+    while [ "$_i" -le "$_option_args_count" ]; do
+        _arg=$(_var_value "_options_${_option_index}_args_${_i}")
+        _option_args="${_option_args}${_delimiter}${_arg}"
+        _i=$(_math "$_i + 1")
+    done
+
+    echo "${_option_args#"$_delimiter"}"
+  fi
 }
 
 _get_option_args_count() {
