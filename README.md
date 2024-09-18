@@ -14,14 +14,36 @@ This is POSIX-compliant parser for script arguments. It helps you focus on writi
 
 ## Installation
 
-Include the `parser.sh` file in your script using [`dot`](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#dot) or [`source`](https://www.gnu.org/software/bash/manual/bash.html#index-source).
-
+Include `parser.sh` content before usage. The most convenient way is to include the `parser.sh` file in your script using [`dot`](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#dot) or [`source`](https://www.gnu.org/software/bash/manual/bash.html#index-source) shell built-ins.
+It is important to note that external files are included relative to the terminal's current directory, not the script's directory. If you decide to include files using a path relative to the script, use the following approach:
 ```bash
-#!/usr/bin/env sh
-. parser.sh
+script_dir="$(dirname "$(readlink -f "$0")")"
+. "$script_dir/parser.sh"
+```
+This will allow you to include the `parser.sh` from the script's directory, regardless of where you run the script from.
+### Git submodule
+
+It is convenient to include parser in your repository as a [Git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules):
+```bash
+git submodule add https://github.com/nikolaypronchev/sh-args-parser.git
+```
+The repository `nikolaypronchev/sh-args-parser` will be copied into your repository in the `sh-args-parser` directory:
+```
+your-repo/
+├ sh-args-parser/
+| ├ parser.sh
+| └ ...
+├ your-script.sh
+└ ...
+```
+Next, include `parser.sh` in your script using the approach from the previous section:
+```bash
+# your-script.sh
+script_dir="$(dirname "$(readlink -f "$0")")"
+. "$script_dir/sh-args-parser/parser.sh"
 ```
 
-Or copy the contents of the `parser.sh` file into your script.
+It’s important to remember that submodules are not fetched by Git by default when running `git clone`. To clone your repository including submodules, use the command `git clone --recurse-submodules`.
 
 ## Usage
 
