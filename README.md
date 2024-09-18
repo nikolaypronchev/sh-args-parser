@@ -1,6 +1,6 @@
 # Sh args parser
 
-This is POSIX-compliant code for parsing shell script arguments. It helps you focus on writing the script logic by separating argument parsing and basic validation.
+This is POSIX-compliant parser for script arguments. It helps you focus on writing the script logic by separating argument parsing and basic validation.
 
 ## Contents
 
